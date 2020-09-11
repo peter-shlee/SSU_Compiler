@@ -4,6 +4,7 @@
 
 #define NUMBER_STRING_LENGTH 100
 int is_float = 0;
+int character_index = 0;
 float num;
 enum {null, NUMBER, PLUS, STAR, LPAREN, RPAREN, END} token;
 
@@ -13,23 +14,24 @@ float term();
 float factor();
 void error(int i);
 
-void main() {
+int main() {
 	float result;
 	get_token();
 	result = expression();
 	if (token != END)
 		error(3);
 	else
-		if (is_float)
-			printf("%f\n", result);
-		else
-			printf("%d\n", (int)result);
+		if (is_float) // 실수형이나 혼합형인 경우
+			printf("%f\n", result); // 실수로 결과 출력
+		else // 정수형인 경우
+			printf("%d\n", (int)result); // 정수로 결과 출력
 }
 
 void get_token(){
 	// next token --> token
 	// number value --> num
 	char next_character = getchar();
+	++character_index;
 	while (next_character == ' ' || next_character == '\t')
 		next_character = getchar();
 	if (next_character == '+') {
@@ -42,25 +44,25 @@ void get_token(){
 		token = RPAREN;
 	} else if (next_character == '\n') {
 		token = END;
-	} else if (isdigit(next_character) || next_character == '.'){
-		float new_number = 0.0; // move declaration
-		char number_string[NUMBER_STRING_LENGTH];
+	} else if (isdigit(next_character)){ // 숫자인 경우
+		char number_string[NUMBER_STRING_LENGTH]; // float 데이터 형으로 바꾸기 전에 문자열 형태로 숫자를 저장해 둘 배열
 		int i = 0;
 		token = NUMBER;
 		number_string[i++] = next_character;
-		while (1) {
-			next_character = getchar();
+		while (1) { // 여러 자리로 된 숫자를 읽는다
+			next_character = getchar(); // 다시 한 문자를 읽는다
+			++character_index;
 			if (isdigit(next_character) || next_character == '.') {
 				number_string[i++] = next_character;
 				if (next_character == '.')
 					is_float = 1;
-			} else {
-				ungetc(next_character, stdin);
-				break;
+			} else { // 읽은 문자가 실수를 이루는 문자가 아니라면
+				ungetc(next_character, stdin); // 읽었던 문자를 다시 입력 버퍼에 돌려놓는다
+				break; // 숫자 모두 읽은 것 이므로 반복 종료
 			}
 		}
 		number_string[i] = '\0';
-		num = atof(number_string);
+		num = atof(number_string); // 문자열로 된 숫자를 float형으로 변환함
 	} else {
 		token = null;
 	}
@@ -106,20 +108,19 @@ float factor() {
 }
 
 void error(int i) {
+	while(character_index-- > 1) printf(" ");
+	printf("^\n");
 	switch(i) {
 		case 1:
-			printf("error 1\n");
+			printf("There must be a number or a left parenthesis.\n");
 			break;
 		case 2:
-			printf("error 2\n");
+			printf("Missing right parenthesis.\n");
 			break;
 		case 3:
-			printf("error 3\n");
+			printf("It must be empty after '^'\n");
 			break;
 	}
 	exit(1);
 }
-
-	
-
 
