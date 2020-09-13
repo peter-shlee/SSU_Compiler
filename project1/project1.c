@@ -57,9 +57,10 @@ void get_token(){
 			++character_index;
 			if (isdigit(next_character) || next_character == '.') {
 				number_string[i++] = next_character;
-				if (next_character == '.')
+				if (next_character == '.') {
 					if (++dot_count > 1) error(4); // 한 숫자 내에서 '.'이 2개 이상 나오면 에러
 					is_float = 1;
+				}
 			} else { // 읽은 문자가 실수를 이루는 문자가 아니라면
 				ungetc(next_character, stdin); // 읽었던 문자를 다시 입력 버퍼에 돌려놓는다
 				--character_index;
@@ -123,7 +124,7 @@ void error(int i) {
 			printf("Missing right parenthesis.\n");
 			break;
 		case 3:
-			printf("It must be empty after '^'\n");
+			printf("It must be empty at '^'\n");
 			break;
 		case 4:
 			printf("Invalid number format.\n");
