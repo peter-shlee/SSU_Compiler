@@ -13,7 +13,6 @@
 #define FACTOR 2
 #define ACC 999
 
-///////
 typedef enum {INT_VAL, ADD, MUL} NODE_NAME;
 typedef struct node {
 	NODE_NAME name;
@@ -63,8 +62,17 @@ int yyparse();
 int yylex();
 void lex_error();
 
-void print_values(NODE *node);
-void print_node(NODE *node);
+// 에러 처리 관련
+int command_index = 0; // 입력된 수식의 인덱스
+int ew_list[1000]; // 에러, 경고 표시할 부분의 인덱스를 저장할 배열
+int ew_last = -1; // ew_list의 마지막 원소의 인덱스
+void push_to_ew_list(int); // ew_list에 원소 추가하는 함수
+void print_ew_points(); // 에러, 경고 위치 표시하는 함수
+int compare_int(const void *_a, const void *_b); // qsort에 사용하는 정수 크기 비교 함수
+
+
+void print_values(NODE *node); // 신택스 트리를 중위순회하며 출력하는 함수
+void print_node(NODE *node); // NODE의 내용을 출력하는 함수
 
 int main() {
 	yyparse();
@@ -114,13 +122,13 @@ void reduce(int i) {
 	// value
 	switch(i) {
 		case 1: 
-			values[top] = makenode(ADD, 0, values[old_top + 1], values[old_top + 3]);
+			values[top] = makenode(ADD, 0, values[old_top + 1], values[old_top + 3]); // ADD NODE 생성
 			break;
 		case 2: 
 			values[top] = values[old_top + 1];
 			break;
 		case 3: 
-			values[top] = makenode(MUL, 0, values[old_top + 1], values[old_top + 3]);
+			values[top] = makenode(MUL, 0, values[old_top + 1], values[old_top + 3]); // MUL NODE 생성
 			break;
 		case 4: 
 			values[top] = values[old_top + 1];
@@ -138,6 +146,8 @@ void reduce(int i) {
 }
 
 void yyerror() {
+	push_to_ew_list(command_index);
+	print_ew_points();
 	printf("syntax error\n");
 	exit(1);
 }
@@ -148,11 +158,13 @@ int yylex() {
 	int is_dot_included = 0;
 	while (ch == ' ' || ch == '\t') {
 		ch = getchar();
+		++command_index;
 	}
 	if (isdigit(ch)) {
-		do {
+		do { // 연속된 숫자들을 계속 읽어들인다
 			yytext[i++] = ch;
 			ch = getchar();
+			++command_index;
 		} while (isdigit(ch));
 		yytext[i] = '\0';
 		yyval = atoi(yytext); // 문자열을 int형으로 변환
@@ -178,11 +190,14 @@ int yylex() {
 }
 
 void lex_error() {
+	push_to_ew_list(command_index);
+	print_ew_points();
 	printf("illegal token\n");
 	exit(1);
 }
 
-void print_node(NODE *node) {
+// NODE의 정보를 출력하는 함수
+void print_node(NODE *node) { 
 	switch(node->name) {
 		case INT_VAL:
 			printf("INT_VAL, value: %d\n", node->val);
@@ -195,11 +210,12 @@ void print_node(NODE *node) {
 			break;
 	}
 }
-
+ 
+// 신택스 트리를 중위순회하면서 출력하는 함수
 void print_values(NODE *node) {
 	if (node == NULL) yyerror();
 	if (node->llink != NULL) {
-		print_values(node->llink);
+		print_values(node->llink); 
 	}
 	print_node(node);
 	if (node->rlink != NULL) {
@@ -207,5 +223,34 @@ void print_values(NODE *node) {
 	}
 
 	return;
+}
+
+// ew_list에 원소 추가하는 함수
+void push_to_ew_list(int i){
+	if (ew_last + 1 < 1000) { // 배열이 꽉찼으면 저장하지 않음
+		ew_list[++ew_last] = i;
+	}
+}
+
+// 에러, 경고 위치 표시하는 함수
+void print_ew_points(){
+	int list_i;
+	int command_i = 0;
+	qsort((void*)ew_list, ew_last + 1, sizeof(int), compare_int); // 앞쪽부터 순차적으로 출력하기 위해 정렬함
+	for (list_i = 0; list_i <= ew_last; ++list_i) {
+		while (command_i++ < ew_list[list_i]) { // 에러, 경고 출력할 위치까지 이동
+			printf(" ");
+		}
+		printf("^"); // 에러, 경고해야할 위치에 '^'문자 출력
+	}
+	printf("\n");
+}
+
+// qsort에 사용하는 정수 크기 비교 함수
+int compare_int(const void *_a, const void *_b) {
+	int *a = (int *)_a;
+	int *b = (int *)_b;
+
+	return *a - *b;
 }
 
