@@ -112,7 +112,7 @@ direct_abstract_declarator
 
 initializer
 	: constant_expression
-	| LR initializer RR
+	| LR initializer_list RR
 initializer_list
 	: initializer
 	| initializer_list COMMA initializer
