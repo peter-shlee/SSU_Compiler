@@ -2115,3 +2115,7 @@ int checkIdentifier(char *s) {
 	return (IDENTIFIER);
 }
 
+int yywrap() {
+	return 1;
+}
+
