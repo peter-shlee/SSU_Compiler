@@ -1,5 +1,9 @@
 %{
-	extern int line_no
+#include "y.tab.h"
+#include <stdio.h>
+extern int line_no;
+extern int yylex (void);
+void yyerror(char *s);
 %}
 %start program
 %token AUTO_SYM BREAK_SYM CASE_SYM CONTINUE_SYM DEFAULT_SYM DO_SYM ELSE_SYM ENUM_SYM FOR_SYM IF_SYM RETURN_SYM SIZEOF_SYM STATIC_SYM STRUCT_SYM SWITCH_SYM TYPEDEF_SYM UNION_SYM WHILE_SYM PLUSPLUS MINUSMINUS ARROW LSS GTR LEQ GEQ EQL NEQ AMPAMP BARBAR DOTDOTDOT LP RP LB RB LR RR COLON PERIOD COMMA EXCL STAR SLASH PERCENT AMP SEMICOLON PLUS MINUS ASSIGN INTEGER_CONSTANT FLOAT_CONSTANT STRING_LITERAL CHARACTER_CONSTANT IDENTIFIER TYPE_IDENTIFIER
@@ -238,7 +242,7 @@ assignment_expression
 
 %%
 extern char *yytext;
-yyerror(char *s) { printf("line %d %s near %s \n", line_no, s, yytext); }
+void yyerror(char *s) { printf("line %d %s near %s \n", line_no, s, yytext); }
 int main() {
  yyparse();
 }
