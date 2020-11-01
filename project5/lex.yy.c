@@ -532,7 +532,7 @@ char *yytext;
 #line 7 "my_c.l"
 #include "y.tab.h"
 //extern int yylval;
-int line_no;
+int line_no = 1;
 //char *makeString();
 int checkIdentifier();
 #line 539 "lex.yy.c"
