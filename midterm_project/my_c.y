@@ -1,79 +1,88 @@
 %{
 #include "y.tab.h"
+#include "type.h"
 #include <stdio.h>
+
 extern int line_no;
 extern int yylex (void);
+
+int current_level = 0;
+
 void yyerror(char *s);
 %}
 %start program
 %token AUTO_SYM BREAK_SYM CASE_SYM CONTINUE_SYM DEFAULT_SYM DO_SYM ELSE_SYM ENUM_SYM FOR_SYM IF_SYM RETURN_SYM SIZEOF_SYM STATIC_SYM STRUCT_SYM SWITCH_SYM TYPEDEF_SYM UNION_SYM WHILE_SYM PLUSPLUS MINUSMINUS ARROW LSS GTR LEQ GEQ EQL NEQ AMPAMP BARBAR DOTDOTDOT LP RP LB RB LR RR COLON PERIOD COMMA EXCL STAR SLASH PERCENT AMP SEMICOLON PLUS MINUS ASSIGN INTEGER_CONSTANT FLOAT_CONSTANT STRING_LITERAL CHARACTER_CONSTANT IDENTIFIER TYPE_IDENTIFIER
 %%
 program
-	: translation_unit
+	: translation_unit {root = makeNode(N_PROGRAM, NIL, $1, NIL); checkForwardReference();}
 translation_unit
-	: external_declaration
-	| translation_unit external_declaration
+	: external_declaration {$$ = $1;}
+	| translation_unit external_declaration {$$ = linkDeclaratorList($1, $2);}
 external_declaration
-	: function_definition
-	| declaration
+	: function_definition {$$ = $1;}
+	| declaration {$$ = $1;}
 
 function_definition
-	: declaration_specifiers declarator compound_statement
-	| declarator compound_statement
+	: declaration_specifiers declarator {$$ = setFunctionDeclaratorSpecifier($2, $1);} compound_statement {$$ = setFunctionDeclaratorBody($3, $4);}
+	| declarator {$$ = setFunctionDeclaratorSpecifier($1, makeSpecifier(int_type, 0));} compound_statement {$$ = setFunctionDeclaratorBody($2, $3);}
 
 declaration
-	: declaration_specifiers SEMICOLON
-	| declaration_specifiers init_declarator_list SEMICOLON
+	: declaration_specifiers init_declarator_list_opt SEMICOLON {$$ = setDeclaratorListSpecifier($2, $1);}
 declaration_specifiers
-	: type_specifier
-	| storage_class_specifier
-	| type_specifier declaration_specifiers
-	| storage_class_specifier declaration_specifiers
+	: type_specifier {$$ = makeSpecifier($1, 0);}
+	| storage_class_specifier {$$ = makeSpecifier(0, $1);}
+	| type_specifier declaration_specifiers {$$ = updateSpecifier($2, $1, 0);}
+	| storage_class_specifier declaration_specifiers {$$ = updateSpecifier($2, 0, $1);}
 storage_class_specifier
-	: AUTO_SYM
-	| STATIC_SYM
-	| TYPEDEF_SYM
+	: AUTO_SYM {$$ = S_AUTO;}
+	| STATIC_SYM {$$ = S_STATIC;}
+	| TYPEDEF_SYM {$$ = S_TYPEDEF;}
+init_declarator_list_opt 
+	: /* empty */ {$$ = NIL;}
+	| init_declarator_list {$$ = $1;}
+
 init_declarator_list
-	: init_declarator
-	| init_declarator_list COMMA init_declarator
+	: init_declarator {$$ = $1;}
+	| init_declarator_list COMMA init_declarator {$$ = linkDeclaratorList($1, $3);}
 init_declarator
-	: declarator
-	| declarator ASSIGN initializer
+	: declarator {$$ = $1;}
+	| declarator ASSIGN initializer {$$ = setDeclaratorInit($1, $3);}
 
 type_specifier
-	: struct_specifier
-	| enum_specifier
-	| TYPE_IDENTIFIER
+	: struct_specifier {$$ = $1;}
+	| enum_specifier {$$ = $1;}
+	| TYPE_IDENTIFIER {$$ = $1;}
 
 struct_specifier
-	: struct_or_union IDENTIFIER LR struct_declaration_list RR
-	| struct_or_union LR struct_declaration_list RR
-	| struct_or_union IDENTIFIER
+	: struct_or_union IDENTIFIER {$$ = setTypeStructOrEnumIdentifier($1, $2, ID_STRUCT);} LR {$$ = current_id; ++current_level;} struct_declaration_list RR {checkForwardReference(); $$ = setTypeField($3, $6); --current_level; current_id = $5;} 
+	| struct_or_union {$$ = makeType($1);} LR {$$ = current_id; ++current_level;} struct_declaration_list RR {checkForwardReference(); $$ = setTypeField($2, $5); --current_level; current_id = $4;} 
+	| struct_or_union IDENTIFIER {$$ = getTypeOfStructOrEnumRefIdentifier($1, $2, ID_STRUCT);}
 struct_or_union
-	: STRUCT_SYM
-	| UNION_SYM
+	: STRUCT_SYM {$$ = T_STRUCT;}
+	| UNION_SYM {$$ = T_UNION;}
 struct_declaration_list
-	: struct_declaration
-	| struct_declaration_list struct_declaration
+	: struct_declaration {$$ = $1;}
+	| struct_declaration_list struct_declaration {$$ = linkDeclaratorList($1, $2);}
 struct_declaration
-	: type_specifier struct_declarator_list SEMICOLON
+	: type_specifier struct_declarator_list SEMICOLON {$$ = setStructDeclaratorListSpecifier($2, $1);}
 struct_declarator_list
-	: struct_declarator
-	| struct_declarator_list COMMA struct_declarator
+	: struct_declarator {$$ = $1;}
+	| struct_declarator_list COMMA struct_declarator {$$ = linkDeclaratorList($1, $3);}
 struct_declarator
-	: declarator
+	: declarator {$$ = $1;}
 
 enum_specifier
-	: ENUM_SYM IDENTIFIER LR enumerator_list RR
-	| ENUM_SYM LR enumerator_list RR
-	| ENUM_SYM IDENTIFIER
+	: ENUM_SYM IDENTIFIER {$$ = setTypeStructOrEnumIdentifier(T_ENUM, $2, ID_ENUM);} LR enumerator_list RR {$$ = setTypeField($3, $5);}
+	| ENUM_SYM {$$ = makeType(T_ENUM);} LR enumerator_list RR {$$ = setTypeField($2, $4);}
+	| ENUM_SYM IDENTIFIER {$$ = getTypeOfStructOrEnumRefIdentifier(T_ENUM, $2, ID_ENUM);}
 enumerator_list
-	: enumerator
-	| enumerator_list COMMA enumerator
+	: enumerator {$$ = $1;}
+	| enumerator_list COMMA enumerator {$$ = linkDeclaratorList($1, $3);}
 enumerator
-	: IDENTIFIER
-	| IDENTIFIER ASSIGN constant_expression
+	: IDENTIFIER {$$ = setDeclaratorKind(makeIdentifier($1), ID_ENUM_LITERAL);}
+	| IDENTIFIER {$$ = setDeclaratorKind(makeIdentifier($1), ID_ENUM_LITERAL);} ASSIGN constant_expression {$$ = setDeclaratorInit($2, $4);}
 
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 declarator
 	: pointer direct_declarator
 	| direct_declarator
@@ -82,10 +91,10 @@ pointer
 	| STAR pointer
 
 direct_declarator
-	: IDENTIFIER
+	: IDENTIFIER {$$ = makeIdentifier($1);}
 	| LP declarator RP
 	| direct_declarator LB constant_expression_opt RB
-	| direct_declarator LP parameter_type_list_opt RP
+	| direct_declarator LP {$$ = current_id; ++current_level;} parameter_type_list_opt RP {checkForwardReference(); --current_level; current_id = $3;} 
 constant_expression_opt
 	:
 	| constant_expression
@@ -115,11 +124,11 @@ direct_abstract_declarator
 	| direct_abstract_declarator LP parameter_type_list_opt RP
 
 initializer
-	: constant_expression
-	| LR initializer_list RR
+	: constant_expression {$$ = makeNode(N_INIT_LIST_ONE, 0, $1, 0);}
+	| LR initializer_list RR {$$ = $2;}
 initializer_list
-	: initializer
-	| initializer_list COMMA initializer
+	: initializer {$$ = makeNode(N_INIT_LIST, $1, 0, makeNode(N_INIT_LIST_NIL, 0, 0, 0));}
+	| initializer_list COMMA initializer {$$ = makeNodeList(N_INIT_LIST, $1, $3);}
 
 statement
 	: labeled_statement
@@ -133,7 +142,7 @@ labeled_statement
 	| DEFAULT_SYM COLON statement
 
 compound_statement
-	: LR declaration_list statement_list RR
+	: LR {$$ = current_id; ++current_level;} declaration_list statement_list RR {checkForwardReference(); --current_level; current_id = $2;}
 declaration_list
 	: 
 	| declaration_list declaration
