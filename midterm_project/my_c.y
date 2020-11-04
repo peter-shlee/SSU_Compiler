@@ -82,46 +82,48 @@ enumerator
 	: IDENTIFIER {$$ = setDeclaratorKind(makeIdentifier($1), ID_ENUM_LITERAL);}
 	| IDENTIFIER {$$ = setDeclaratorKind(makeIdentifier($1), ID_ENUM_LITERAL);} ASSIGN constant_expression {$$ = setDeclaratorInit($2, $4);}
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 declarator
-	: pointer direct_declarator
-	| direct_declarator
+	: pointer direct_declarator {$$ = setDeclaratorElementType($2, $1);}
+	| direct_declarator {$$ = $1;}
 pointer
-	: STAR
-	| STAR pointer
+	: STAR {$$ = makeType(T_POINTER);}
+	| STAR pointer {$$ = setTypeElementType($2, makeType(T_POINTER));}
 
 direct_declarator
 	: IDENTIFIER {$$ = makeIdentifier($1);}
-	| LP declarator RP
-	| direct_declarator LB constant_expression_opt RB
-	| direct_declarator LP {$$ = current_id; ++current_level;} parameter_type_list_opt RP {checkForwardReference(); --current_level; current_id = $3;} 
+	| LP declarator RP {$$ = $2;}
+	| direct_declarator LB constant_expression_opt RB {$$ = setDeclaratorElementType($1, setTypeExpr(makeType(T_ARRAY), $3));}
+	| direct_declarator LP {$$ = current_id; ++current_level;} parameter_type_list_opt RP {checkForwardReference(); --current_level; current_id = $3; $$ = setDeclaratorElementType($1, setTypeField(makeType(T_FUNC), $4));} 
 constant_expression_opt
 	:
 	| constant_expression
 parameter_type_list_opt
-	:
-	| parameter_type_list
+	: {$$ = NIL;}
+	| parameter_type_list {$$ = $1;}
 
 parameter_type_list
-	: parameter_list
-	| parameter_list DOTDOTDOT
+	: parameter_list {$$ = $1;}
+	| parameter_list COMMA DOTDOTDOT {$$ = linkDeclaratorList($1, setDeclaratorKind(makeDummyIdentifier(), ID_PARM));}
 parameter_list
-	: parameter_declaration
-	| parameter_list COMMA parameter_declaration
+	: parameter_declaration {$$ = $1;}
+	| parameter_list COMMA parameter_declaration {$$ = linkDeclaratorList($1, $3);}
 parameter_declaration
-	: declaration_specifiers declarator
-	| declaration_specifiers abstract_declarator
-	| declaration_specifiers
+	: declaration_specifiers declarator {$$ = setParameterDeclaratorSpecifier($2, $1);}
+	| declaration_specifiers abstract_declarator {$$ = setParameterDeclaratorSpecifier(setDeclaratorType(makeDummyIdentifier(), $2), $1);}
+abstract_declarator_opt
+	: {$$ = NIL}
+	| abstract_declarator {$$ = $1}
 abstract_declarator
-	: pointer
-	| direct_abstract_declarator
-	| pointer direct_abstract_declarator
+	: pointer {$$ = makeType(T_POINTER);}
+	| direct_abstract_declarator {$$ = $1;}
+	| pointer direct_abstract_declarator {$$ = setTypeElementType($2, makeType(T_POINTER));}
 direct_abstract_declarator
-	: LP abstract_declarator RP
-	| LB constant_expression_opt RB
-	| LP parameter_type_list_opt RP
-	| direct_abstract_declarator LB constant_expression_opt RB
-	| direct_abstract_declarator LP parameter_type_list_opt RP
+	: LP abstract_declarator RP {$$ = $2;}
+	| LB constant_expression_opt RB {$$ = setTypeExpr(makeType(T_ARRAY), $2);}
+	| LP parameter_type_list_opt RP {$$ = setTypeExpr(makeType(T_FUNC), $2);}
+	| direct_abstract_declarator LB constant_expression_opt RB {$$ = setTypeElementType($1, setTypeExpr(makeType(T_ARRAY), $3));}
+	| direct_abstract_declarator LP parameter_type_list_opt RP {$$ = setTypeElementType($1, setTypeExpr(makeType(T_FUNC), $3));}
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 initializer
 	: constant_expression {$$ = makeNode(N_INIT_LIST_ONE, 0, $1, 0);}
@@ -129,7 +131,12 @@ initializer
 initializer_list
 	: initializer {$$ = makeNode(N_INIT_LIST, $1, 0, makeNode(N_INIT_LIST_NIL, 0, 0, 0));}
 	| initializer_list COMMA initializer {$$ = makeNodeList(N_INIT_LIST, $1, $3);}
-
+statement_list_opt
+	: {$$ = makeNode(N_STMT_LIST_NIL, NIL, NIL, NIL);}
+	| statement_list {$$ = $1;}
+statement_list
+	:
+	| statement_list statement
 statement
 	: labeled_statement
 	| compound_statement
@@ -146,9 +153,6 @@ compound_statement
 declaration_list
 	: 
 	| declaration_list declaration
-statement_list
-	:
-	| statement_list statement
 
 expression_statement
 	: SEMICOLON
