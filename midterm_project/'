@@ -316,17 +316,21 @@ A_ID *setFunctionDeclaratorSpecifier(A_ID *id, A_SPECIFIER *specifier) {
 	}
 	setDefaultSpecifier(specifier);
 
-	if (id->type->kind != T_FUNC) {
+	printf("aaaaaaaaaaaaaaaaaaaa\n");
+	if (!id || id->type->kind != T_FUNC) {
+		printf("1111111111111111111111\n");
 		syntax_error(21);
 		return id;
 	} else {
+		printf("222222222222222222222\n");
 		id = setDeclaratorElementType(id, specifier->type);
 		id->kind = ID_FUNC;
 	}
 
+	printf("bbbbbbbbbbbbbbbbbbbbb\n");
 	a = searchIdentifierAtCurrentLevel(id->name, id->prev);
 	if (a) {
-		if (a->type->kind != T_FUNC || a->type->expr) {
+		if (a->kind != ID_FUNC || a->type->expr) {
 			syntax_error(12, id->name);
 		} else {
 			if (isNotSameFormalParameters(a->type->field, id->type->field)) {
@@ -339,6 +343,7 @@ A_ID *setFunctionDeclaratorSpecifier(A_ID *id, A_SPECIFIER *specifier) {
 		}
 	}
 
+	printf("icccccccccccccccccccccccc\n");
 	a = id->type->field;
 	while(a) {
 		if (strlen(a->name)) {

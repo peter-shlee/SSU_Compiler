@@ -156,14 +156,17 @@ labeled_statement
 	| DEFAULT_SYM COLON statement {$$ = makeNode(N_STMT_LABEL_DEFAULT, NIL, $3, NIL);}
 
 compound_statement
-	: LR {$$ = current_id; ++current_level;} declaration_list statement_list_opt RR {checkForwardReference(); $$ = makeNode(N_STMT_COMPOUND, $3, NIL, $4); --current_level; current_id = $2;}
+	: LR {$$ = current_id; ++current_level;} declaration_list_opt statement_list_opt RR {checkForwardReference(); $$ = makeNode(N_STMT_COMPOUND, $3, NIL, $4); --current_level; current_id = $2;}
+declaration_list_opt
+	: {$$ = NIL;}
+	| declaration_list {$$ = $1;}
 declaration_list
 	: declaration {$$ = $1;}
 	| declaration_list declaration {$$ = linkDeclaratorList($1, $2);}
 
 expression_statement
 	: SEMICOLON {$$ = makeNode(N_STMT_EMPTY, NIL, NIL, NIL);}
-	| expression SEMICOLON {$$ = makeNODE(N_STMT_EXPRESSION, NIL, $1, NIL);}
+	| expression SEMICOLON {$$ = makeNode(N_STMT_EXPRESSION, NIL, $1, NIL);}
 
 selection_statement
 	: IF_SYM LP expression RP statement {$$ = makeNode(N_STMT_IF, $3, NIL, $5);}
@@ -263,13 +266,12 @@ assignment_expression
 extern char *yytext;
 void yyerror(char *s) { printf("line %d %s near %s \n", line_no, s, yytext); }
 
-void main(int argc, char *argv[]) { //적당히 고쳐서 사용하세요
-//	if ((yyin=fopen(argv[argc-1],"r"))==NULL){
-//		printf("can not open input file: %s\n",argv[argc-1]);
-//		exit(1);
-//	}
+void main() { //적당히 고쳐서 사용하세요
 	initialize();
 	yyparse();
-	if (!syntax_err)
+	if (!syntax_err && root)
 		print_ast(root);
+
+	return;
 }
+

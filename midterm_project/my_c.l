@@ -11,8 +11,8 @@ typedef long YYSTYPE;
 #include "y.tab.h"
 #include "type.h"
 //extern int yylval;
-A_ID *current_id;
-int line_no = 1;
+extern int line_no;
+extern A_ID *current_id;
 char *makeString(char *);
 int checkIdentifier();
 %}
@@ -74,7 +74,7 @@ while 		{ return(WHILE_SYM); }
 \'([^'\n]|\'\')\' 		{ yylval = *(yytext + 1); return(CHARACTER_CONSTANT);}
 %%
 char *makeString(char *s) {
-	char *new_string = (char *)calloc(strlen(s) + 1, sizeof(char));
+	char *new_string = (char *)malloc(strlen(s) + 1);
 	strcpy(new_string, s);
 
 	return new_string;
@@ -84,7 +84,7 @@ int checkIdentifier(char *s) {
 	A_ID *id = current_id;
 
 	while(id) {
-		if (strcmp(id->name, s)) {
+		if (!strcmp(id->name, s)) {
 			break;
 		}
 
