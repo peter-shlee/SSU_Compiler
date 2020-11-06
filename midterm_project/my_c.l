@@ -4,10 +4,16 @@ delim 		[ \t]
 line 		[\n]
 ws 		{delim}+
 %{
+
+#define YYSTYPE_IS_DECLARED 1
+typedef long YYSTYPE;
+
 #include "y.tab.h"
+#include "type.h"
 //extern int yylval;
+A_ID *current_id;
 int line_no = 1;
-//char *makeString();
+char *makeString(char *);
 int checkIdentifier();
 %}
 %%
@@ -61,23 +67,41 @@ while 		{ return(WHILE_SYM); }
 "\+" 		{ return(PLUS); }
 "\-" 				{ return(MINUS); }
 "\=" 				{ return(ASSIGN); }
-{digit}+ 			{ return(INTEGER_CONSTANT);}
-{digit}+\.{digit}+ 		{ return(FLOAT_CONSTANT);}
+{digit}+ 			{ yylval = atoi(yytext); return(INTEGER_CONSTANT);}
+{digit}+\.{digit}+ 		{ yylval = makeString(yytext); return(FLOAT_CONSTANT);}
 {letter}({letter}|{digit})* 	{ return(checkIdentifier(yytext));}
-\"([^"\n]|\\["\n])*\" 		{ return(STRING_LITERAL);}
-\'([^'\n]|\'\')\' 		{ return(CHARACTER_CONSTANT);}
+\"([^"\n]|\\["\n])*\" 		{ yylval = makeString(yytext); return(STRING_LITERAL);}
+\'([^'\n]|\'\')\' 		{ yylval = *(yytext + 1); return(CHARACTER_CONSTANT);}
 %%
-int checkIdentifier(char *s) {
-	char *table[] = {"int", "float", "char", "void"};
-	int i;
-	int table_size = sizeof(table) / sizeof(table[0]);
+char *makeString(char *s) {
+	char *new_string = (char *)calloc(strlen(s) + 1, sizeof(char));
+	strcpy(new_string, s);
 
-	for (i = 0; i < table_size; ++i) {
-		if (!strcmp(table[i], s)) {
-			return (TYPE_IDENTIFIER);
+	return new_string;
+}
+
+int checkIdentifier(char *s) {
+	A_ID *id = current_id;
+
+	while(id) {
+		if (strcmp(id->name, s)) {
+			break;
 		}
+
+		id = id->prev;
 	}
 	
+	if (!id) {
+		yylval = makeString(s);
+		return IDENTIFIER;
+	} else if (id->kind == ID_TYPE) {
+		yylval = id->type;
+		return TYPE_IDENTIFIER;
+	} else {
+		yylval = id->name;
+		return IDENTIFIER;
+	}
+
 	return (IDENTIFIER);
 }
 

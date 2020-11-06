@@ -1,12 +1,19 @@
 %{
+
+#define YYSTYPE_IS_DECLARED 1
+typedef long YYSTYPE;
+
 #include "y.tab.h"
 #include "type.h"
+#include "my_c_func.h"
 #include <stdio.h>
 
-extern int line_no;
-extern int yylex (void);
+extern int line_no, syntax_err, current_level;
+extern A_NODE *root;
+extern A_ID *current_id;
+extern A_TYPE *int_type;
 
-int current_level = 0;
+extern int yylex (void);
 
 void yyerror(char *s);
 %}
@@ -111,8 +118,8 @@ parameter_declaration
 	: declaration_specifiers declarator {$$ = setParameterDeclaratorSpecifier($2, $1);}
 	| declaration_specifiers abstract_declarator_opt {$$ = setParameterDeclaratorSpecifier(setDeclaratorType(makeDummyIdentifier(), $2), $1);}
 abstract_declarator_opt
-	: {$$ = NIL}
-	| abstract_declarator {$$ = $1}
+	: {$$ = NIL;}
+	| abstract_declarator {$$ = $1;}
 abstract_declarator
 	: pointer {$$ = makeType(T_POINTER);}
 	| direct_abstract_declarator {$$ = $1;}
@@ -145,8 +152,8 @@ statement
 	| iteration_statement {$$ = $1;}
 	| jump_statement {$$ = $1;}
 labeled_statement
-	: CASE_SYM constant_expression COLON statement {$$ = makeNode(N_STMT_LABLE_CASE, $2, NIL, $4);}
-	| DEFAULT_SYM COLON statement {$$ = makeNode(N_STMT_LABLE_DEFAULT, NIL, $3, NIL);}
+	: CASE_SYM constant_expression COLON statement {$$ = makeNode(N_STMT_LABEL_CASE, $2, NIL, $4);}
+	| DEFAULT_SYM COLON statement {$$ = makeNode(N_STMT_LABEL_DEFAULT, NIL, $3, NIL);}
 
 compound_statement
 	: LR {$$ = current_id; ++current_level;} declaration_list statement_list_opt RR {checkForwardReference(); $$ = makeNode(N_STMT_COMPOUND, $3, NIL, $4); --current_level; current_id = $2;}
@@ -256,83 +263,11 @@ assignment_expression
 extern char *yytext;
 void yyerror(char *s) { printf("line %d %s near %s \n", line_no, s, yytext); }
 
-void initialize() {
-	// primitive data types
-	int_type=setTypeAndKindOfDeclarator(
-	makeType(T_ENUM),ID_TYPE,makeIdentifier("int"));
-	float_type=setTypeAndKindOfDeclarator(
-	makeType(T_ENUM),ID_TYPE,makeIdentifier("float"));
-	char_type= setTypeAndKindOfDeclarator(
-	makeType(T_ENUM),ID_TYPE,makeIdentifier("char"));
-	void_type=setTypeAndKindOfDeclarator(
-	makeType(T_VOID),ID_TYPE,makeIdentifier("void"));
-	string_type=setTypeElementType(makeType(T_POINTER),char_type);
-	int_type->size=4; int_type->check=TRUE;
-	float_type->size=4; float_type->check=TRUE;
-	char_type->size=1; char_type->check=TRUE;
-	void_type->size=0; void_type->check=TRUE;
-	string_type->size=4; string_type->check=TRUE;
-	// printf(char *, ...) library function
-	setDeclaratorTypeAndKind(
-	makeIdentifier("printf"),
-	setTypeField(
-	setTypeElementType(makeType(T_FUNC),void_type),
-	linkDeclaratorList(
-	setDeclaratorTypeAndKind(makeDummyIdentifier(),string_type,ID_PARM),
-	setDeclaratorKind(makeDummyIdentifier(),ID_PARM))),
-	ID_FUNC);
-	// scanf(char *, ...) library function
-	setDeclaratorTypeAndKind(
-	makeIdentifier("scanf"),
-	setTypeField(
-	setTypeElementType(makeType(T_FUNC),void_type),
-	linkDeclaratorList(
-	setDeclaratorTypeAndKind(makeDummyIdentifier(),string_type,ID_PARM),
-	setDeclaratorKind(makeDummyIdentifier(),ID_PARM))),
-	ID_FUNC);
-	// malloc(int) library function
-	setDeclaratorTypeAndKind(
-	makeIdentifier("malloc"),
-	setTypeField(
-	setTypeElementType(makeType(T_FUNC),string_type),
-	setDeclaratorTypeAndKind(makeDummyIdentifier(),int_type,ID_PARM)),
-	ID_FUNC);
-}
-
-void syntax_error(int i,char *s) {
-	syntax_err++;
-	printf("line %d: syntax error: ", line_no);
-	switch (i) {
-		case 11: printf("illegal referencing struct or union identifier %s",s);
-		break;
-		case 12: printf("redeclaration of identifier %s",s); break;
-		case 13: printf("undefined identifier %s",s); break;
-		case 14: printf("illegal type specifier in formal parameter"); break;
-		case 20: printf("illegal storage class in type specifiers"); break;
-		case 21: printf("illegal function declarator"); break;
-		case 22: printf("conflicting parm type in prototype function %s",s);
-		break;
-		case 23: printf("empty parameter name"); break;
-		case 24: printf("illegal declaration specifiers"); break;
-		case 25: printf("illegal function specifiers"); break;
-		case 26: printf("illegal or conflicting return type in function %s",s);
-		break;
-		case 31: printf("undefined type for identifier %s",s); break;
-		case 32: printf("incomplete forward reference for identifier %s",s);
-		break;
-		default: printf("unknown"); break;
-	}
-	if (strlen(yytext)==0)
-		printf(" at end\n");
-	else
-		printf(" near %s\n", yytext);
-}
-
 void main(int argc, char *argv[]) { //적당히 고쳐서 사용하세요
-	if ((yyin=fopen(argv[argc-1],"r"))==NULL){
-		printf("can not open input file: %s\n",argv[argc-1]);
-		exit(1);
-	}
+//	if ((yyin=fopen(argv[argc-1],"r"))==NULL){
+//		printf("can not open input file: %s\n",argv[argc-1]);
+//		exit(1);
+//	}
 	initialize();
 	yyparse();
 	if (!syntax_err)

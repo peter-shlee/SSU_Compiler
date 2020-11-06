@@ -1,4 +1,6 @@
-#define NIL 0
+#ifndef __TYPE_H__
+#define __TYPE_H__
+#define NIL 0 
 typedef enum {FALSE,TRUE} BOOLEAN;
 typedef enum e_node_name {
 	N_NULL,
@@ -118,4 +120,4 @@ typedef struct {
 	S_KIND stor;
 	int line;
 } A_SPECIFIER;
-
+#endif
