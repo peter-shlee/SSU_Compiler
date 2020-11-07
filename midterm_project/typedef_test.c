@@ -3,8 +3,11 @@ typedef struct proc{
 	char *mem;
 	int size;
 	int ctxt_swtch_cnt;
-} pcb;
+} PCB;
 
-int main(void){
+int main(){
+	PCB *pcb = (PCB *)malloc(sizeof(PCB));
 	printf("hello world\n");
+
+	return 0;
 }
