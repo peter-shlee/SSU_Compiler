@@ -176,7 +176,9 @@ selection_statement
 iteration_statement
 	: WHILE_SYM LP expression RP statement {$$ = makeNode(N_STMT_WHILE, $3, NIL, $5);}
 	| DO_SYM statement WHILE_SYM LP expression RP SEMICOLON {$$ = makeNode(N_STMT_DO, $2, NIL, $5);}
-	| FOR_SYM LP expression_opt SEMICOLON expression_opt SEMICOLON expression_opt RP statement {$$ = makeNode(N_STMT_FOR, $3, NIL, $5);}
+	| FOR_SYM LP for_expression RP statement {$$ = makeNode(N_STMT_FOR, $3, NIL, $5);}
+for_expression
+	: expression_opt SEMICOLON expression_opt SEMICOLON expression_opt {$$ = makeNode(N_FOR_EXP, $1, $3, $5); }
 expression_opt
 	: {$$ = NIL;}
 	| expression {$$ = $1;}
