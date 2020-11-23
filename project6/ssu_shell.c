@@ -1,6 +1,11 @@
 typedef int FILE;
 typedef int size_t;
+int NULL = 0;
+int stderr = 2;
+int WUNTRACED = 0;
 int MAX_TOKEN_SIZE = 1024;
+int MAX_INPUT_SIZE = 1024;
+int MAX_NUM_TOKENS = 1024;
 int BUFFER_SIZE = 1024;
 char *strcpy(char *dest, char *src);
 int strlen(char *s);
@@ -11,10 +16,20 @@ char *getcwd(char *, int);
 char *getenv(char *);
 void bzero(void *s, size_t n);
 char *fgets(char *, int, FILE *);
+int setenv(char *, char*, int);
+FILE *fopen(char *, char *);
+int getchar();
+int pipe(int pipefd[2]);
+int fprintf(FILE *, char*, ...);
+int fork();
+int waitpid(int, int*, int);
+int dup2(int, int);
+int close(int);
+int execvp(char*, char* argv);
+void exit(int);
 
 void execute_command(char **tokens, int command_start_index, int stdin_fd);
 int get_next_pipe_index(char **tokens, int command_start_index);
-int check_exit_status(int status);
 
 char **tokenize(char *line)
 {
@@ -44,20 +59,20 @@ char **tokenize(char *line)
 }
 
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv) {
 	char  line[MAX_INPUT_SIZE];
 	char  **tokens;
 	int i;
 	char current_dir_name[BUFFER_SIZE];
 	char *path_env_value;
 	char new_path_env_value[BUFFER_SIZE];
+	FILE* fp;
 
 	getcwd(current_dir_name, BUFFER_SIZE);
 	path_env_value = getenv("PATH");
 	sprintf(new_path_env_value, "%s:%s", path_env_value, current_dir_name);
 	setenv("PATH", new_path_env_value, 1);
 
-	FILE* fp;
 	if(argc == 2) {
 		fp = fopen(argv[1],"r");
 		if(fp < 0) {
@@ -113,9 +128,6 @@ void execute_command(char **tokens, int command_start_index, int stdin_fd){
 
 	if ((pid = fork()) > 0) {
 		waitpid(pid, &status, WUNTRACED);
-		if (!check_exit_status(status)){
-			return;
-		}
 		if (pipe_index > 0) {
 			close(pipe_fd[1]);
 			execute_command(tokens, pipe_index + 1, pipe_fd[0]);
@@ -143,21 +155,6 @@ void execute_command(char **tokens, int command_start_index, int stdin_fd){
 	}
 
 	return;
-}
-
-int check_exit_status(int status) {
-	if (WIFEXITED(status)) {
-		return 1;
-	} else if (WIFSIGNALED(status)) {
-		fprintf(stderr, "abnormal termination, signal number = %d%sn", 
-				WTERMSIG(status), "");
-		return 0;
-	} else if (WIFSTOPPED(status)) { 
-		fprintf(stderr, "child stopped, signal number = %dn", WSTOPSIG(status));
-		return 0;
-	}
-
-	return 0;
 }
 
 int get_next_pipe_index(char **tokens, int command_start_index){
