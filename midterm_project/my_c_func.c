@@ -365,8 +365,18 @@ A_ID *setParameterDeclaratorSpecifier(A_ID *id, A_SPECIFIER *specifier) {
 		syntax_error(12, id->name);
 	}
 
-	if (specifier->stor || specifier->type == void_type) {
+	if (specifier->stor) {
 		syntax_error(14);
+	}
+
+	if (specifier->type == void_type) {
+		if (!id->type) {
+			syntax_error(14);
+		} else if (id->type->kind != T_POINTER) {
+			syntax_error(14);
+		} else {
+			;
+		}
 	}
 
 	setDefaultSpecifier(specifier);
