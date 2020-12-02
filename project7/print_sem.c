@@ -23,9 +23,7 @@ print_space(int);
 print_node(A_NODE *,int);
 void print_sem_ast(A_NODE *node)
 {
-	printf("=======
-			semantic tree
-			==========\n");
+	printf("======= semantic tree ==========\n");
 	prt_sem_program(node,0);
 }
 void prt_sem_program(A_NODE *node, int s)
@@ -264,53 +262,44 @@ void prt_sem_A_TYPE(A_TYPE *t, int s)
 			case T_ENUM:
 				t->prt=FALSE;
 				printf("ENUM\n");
-				print_space(s); printf("|
-						ENUMERATORS\n");
+				print_space(s); printf("|ENUMERATORS\n");
 				prt_sem_A_ID_LIST(t->field,s+2);
 				break;
 			case T_POINTER:
 				t->prt=FALSE;
 				printf("POINTER\n");
-				print_space(s); printf("|
-						ELEMENT_TYPE\n");
+				print_space(s); printf("|ELEMENT_TYPE\n");
 				prt_sem_A_TYPE(t->element_type,s+2);
 				break;
 			case T_ARRAY:
 				t->prt=FALSE;
 				printf("ARRAY\n");
-				print_space(s); printf("|
-						INDEX\n");
+				print_space(s); printf("|INDEX\n");
 				prt_sem_integer(t->expr,s+2);
-				print_space(s); printf("|
-						ELEMENT_TYPE\n");
+				print_space(s); printf("|ELEMENT_TYPE\n");
 				prt_sem_A_TYPE(t->element_type,s+2);
 				break;
 			case T_STRUCT:
 				t->prt=FALSE;
 				printf("STRUCT\n");
-				print_space(s); printf("|
-						FIELD\n");
+				print_space(s); printf("|FIELD\n");
 				prt_sem_A_ID_LIST(t->field,s+2);
 				break;
 			case T_UNION:
 				t->prt=FALSE;
 				printf("UNION\n");
-				print_space(s); printf("|
-						FIELD\n");
+				print_space(s); printf("|FIELD\n");
 				prt_sem_A_ID_LIST(t->field,s+2);
 				break;
 			case T_FUNC:
 				t->prt=FALSE;
 				printf("FUNCTION\n");
-				print_space(s); printf("|
-						PARAMETER\n");
+				print_space(s); printf("|PARAMETER\n");
 				prt_sem_A_ID_LIST(t->field,s+2);
-				print_space(s); printf("|
-						TYPE\n");
+				print_space(s); printf("|TYPE\n");
 				prt_sem_A_TYPE(t->element_type,s+2);
 				if (t->expr) {
-					print_space(s); printf("|
-							BODY\n");
+					print_space(s); printf("|BODY\n");
 					prt_sem_statement(t->expr,s+2);}
 		}
 }
@@ -324,28 +313,24 @@ void prt_sem_A_ID_LIST(A_ID *id, int s)
 void prt_sem_A_ID_NAME(A_ID *id, int s)
 {
 	print_space(s);
-	printf("(ID=\"%s\") TYPE:%x KIND:%s SPEC=%s LEV=%d VAL=%d ADDR=%d
-			\n", id->name, id->type,
+	printf("(ID=\"%s\") TYPE:%x KIND:%s SPEC=%s LEV=%d VAL=%d ADDR=%d\n", id->name, id->type,
 			id_kind_name[id->kind],
 			id->value, id->address);
 }
 void prt_sem_A_ID(A_ID *id, int s)
 {
 	print_space(s);
-	printf("(ID=\"%s\") TYPE:%x KIND:%s SPEC=%s LEV=%d VAL=%d ADDR=%d
-			\n", id->name, id->type,
+	printf("(ID=\"%s\") TYPE:%x KIND:%s SPEC=%s LEV=%d VAL=%d ADDR=%d\n", id->name, id->type,
 			id_kind_name[id->kind],
 			spec_name[id->specifier],id->level,
 			id->value, id->address);
 	if (id->type) {
 		print_space(s);
-		printf("|
-				TYPE\n");
+		printf("|TYPE\n");
 		prt_sem_A_TYPE(id->type,s+2);}
 	if (id->init) {
 		print_space(s);
-		printf("|
-				INIT\n");
+		printf("|INIT\n");
 		if (id->kind==ID_ENUM_LITERAL)
 			if (id->init)
 				prt_sem_integer(id->init,s+2);
