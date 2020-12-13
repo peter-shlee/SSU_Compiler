@@ -16,13 +16,11 @@ void gen_expression_left(A_NODE *);
 void gen_arg_expression(A_NODE *);
 void gen_statement(A_NODE *, int, int);
 void gen_statement_list(A_NODE *, int, int);
-void gen_initializer_global(A_NODE *, A_TYPE *, int);
-void gen_initializer_local(A_NODE *, A_TYPE *, int);
 void gen_declaration_list(A_ID *);
 void gen_declaration(A_ID *);
 void gen_code_i(OPCODE, int, int);
-void gen_code_f(OPCODE, int, int);
-void gen_code_s(OPCODE, int, int);
+void gen_code_f(OPCODE, int, float);
+void gen_code_s(OPCODE, int, char *);
 void gen_code_l(OPCODE, int, int);
 void gen_label_number(int);
 void gen_label_name(char *);
@@ -59,7 +57,7 @@ void gen_literal_table(){
 	return;
 }
 
-void gen_program(A_NODE *){
+void gen_program(A_NODE *node){
 	switch (node->name) {
 		case N_PROGRAM :
 			gen_code_i(INT, 0, node->value);
@@ -74,7 +72,7 @@ void gen_program(A_NODE *){
 
 }
 
-void gen_expression(A_NODE *){
+void gen_expression(A_NODE *node){
 	A_ID *id;
 	A_TYPE *t;
 	int i, ll;
@@ -96,12 +94,6 @@ void gen_expression(A_NODE *){
 								gen_code_i(LDA, id->level, id->address);
 							else
 								gen_code_i(LOD, id->level, id->address);
-							break;
-						case T_STRUCT:
-						case T_UNION:
-							gen_code_i(LDA, id->level, id->address);
-							i = id->type->size;
-							gen_code_i(LDI, 0, (i % 4) ? (i / 4 + 1) : (i / 4));
 							break;
 						default:
 							break;
@@ -161,8 +153,359 @@ void gen_expression(A_NODE *){
 			gen_exrpession(node->llink);
 			gen_code_i(CAL, 0, 0);
 			break;
-		case N_EXP_STRUCT:
-		case N_EXP_ARROW:
+		case N_EXP_POST_INC:
+			gen_expression(node->clink);
+			gen_expression_left(node->clink);
+			t = node->type;
+			if (node->type->size == 1) {
+				gen_code_i(LDXB, 0, 0);
+			} else {
+				gen_code_i(LDX, 0, 1);
+			}
+
+			if (isPointerOrArrayType(node->type)) {
+				gen_code_i(LITI, 0, node->type->element_type->size);
+				gen_code_i(ADDI, 0, 0);
+			} else if (isFloatType(node->type)) {
+				gen_code_i(INCF, 0, 0);
+			} else {
+				gen_code_i(INCI, 0, 0);
+			}
+
+			if (node->type->size == 1) {
+				gen_code_i(STOB, 0, 0);
+			} else {
+				gen_code_i(STO, 0, 1);
+			}
+
+			break;
+		case N_EXP_POST_DEC:
+			gen_expression(node->clink);
+			gen_expression_left(node->clink);
+			t = node->type;
+			if (node->type->size == 1) {
+				gen_code_i(LDXB, 0, 0);
+			} else {
+				gen_code_i(LDX, 0, 1);
+			}
+
+			if (isPointerOrArrayType(node->type)) {
+				gen_code_i(LITI, 0, node->type->element_type->size);
+				gen_code_i(SUBI, 0, 0);
+			} else if (isFloatType(node->type)) {
+				gen_code_i(DECF, 0, 0);
+			} else {
+				gen_code_i(DECI, 0, 0);
+			}
+
+			if (node->type->size == 1) {
+				gen_code_i(STOB, 0, 0);
+			} else {
+				gen_code_i(STO, 0, 1);
+			}
+
+			break;
+		case N_EXP_PRE_INC:
+			gen_expression_left(node->clink);
+			t = node->type;
+			if (node->type->size == 1) {
+				gen_code_i(LDXB, 0, 0);
+			} else {
+				gen_code_i(LDX, 0, 1);
+			}
+
+			if (isPointerOrArrayType(node->type)) {
+				gen_code_i(LITI, 0, node->type->element_type->size);
+				gen_code_i(ADDI, 0, 0);
+			} else if (isFloatType(node->type)) {
+				gen_code_i(INCF, 0, 0);
+			} else {
+				gen_code_i(INCI, 0, 0);
+			}
+
+			if (node->type->size == 1) {
+				gen_code_i(STXB, 0, 0);
+			} else {
+				gen_code_i(STX, 0, 1);
+			}
+
+			break;
+		case N_EXP_PRE_DEC:
+			gen_expression(node->clink);
+			gen_expression_left(node->clink);
+			t = node->type;
+			if (node->type->size == 1) {
+				gen_code_i(LDXB, 0, 0);
+			} else {
+				gen_code_i(LDX, 0, 1);
+			}
+
+			if (isPointerOrArrayType(node->type)) {
+				gen_code_i(LITI, 0, node->type->element_type->size);
+				gen_code_i(SUBI, 0, 0);
+			} else if (isFloatType(node->type)) {
+				gen_code_i(DECF, 0, 0);
+			} else {
+				gen_code_i(DECI, 0, 0);
+			}
+
+			if (node->type->size == 1) {
+				gen_code_i(STXB, 0, 0);
+			} else {
+				gen_code_i(STX, 0, 1);
+			}
+
+			break;
+		case N_EXP_NOT:
+			gen_expression(node->clink);
+			gen_code_i(NOT, 0, 0);
+			break;
+		case N_EXP_PLUS:
+			gen_expression(node->clink);
+			break;
+		case N_EXP_MINUS:
+			gen_expression(node->clnik);
+			if (isFloatType(node->clink)) {
+				gen_code_i(MINUSF, 0, 0);
+			} else {
+				gen_code_i(MINUSI, 0, 0);
+			}
+			break;
+		case N_EXP_AMP:
+			gen_expression_left(node->clink);
+			break;
+		case N_EXP_STAR:
+			gen_expression(node->clink);
+			i = node->type->size;
+			if (i == 1) {
+				gen_code_i(LDIB, 0, 0);
+			} else {
+				gen_code_i(LDI, 0, (i % 4) ? (i / 4 + 1) : (i / 4));
+			}
+			break;
+		case N_EXP_SIZE_EXP:
+			gen_code_i(LITI, 0, node->clink);
+			break;
+		case N_EXP_SIZE_TYPE:
+			gen_code_i(LITI, 0, node->clink);
+			break;
+		case N_EXP_CAST:
+			gen_expression(node->rlink);
+			if (node->type != node->rlink->type) {
+				if (isFloatType(node->type)) {
+					gen_code_i(CVTF, 0, 0);
+				} else if (isFloatType(node->rlink->type)) {
+					gen_code_i(CVTI, 0, 0);
+				}
+			}
+			break;
+		case N_EXP_MUL:
+			gen_expression(node->llink);
+			gen_expression(node->rlink);
+			if (isFloatType(node->type)) {
+				gen_code_i(MULF, 0, 0);
+			} else {
+				gen_code_i(MULI, 0, 0);
+			}
+			break;
+		case N_EXP_DIV:
+			gen_expression(node->llink);
+			gen_expression(node->rlink);
+			if (isFloatType(node->type)) {
+				gen_code_i(DIVF, 0, 0);
+			} else {
+				gen_code_i(DIVI, 0, 0);
+			}
+			break;
+		case N_EXP_MOD:
+			gen_expression(node->llink);
+			gen_expression(node->rlink);
+			gen_code_i(MOD, 0, 0);
+			break;
+		case N_EXP_ADD:
+			gen_expression(node->llink);
+
+			if (isPointerOrArrayType(node->rlink0>type)) {
+				gen_code_i(LITI, 0, node->rlink->type->element_type->size);
+				gen_code_i(MULI, 0, 0);
+			}
+
+			gen_expression(node->rlink);
+
+			if (isPointerOrArrayType(node->llnik->type)) {
+				gen_code_i(LITI, 0, node->llink->type->element_type->size);
+				gen_code_i(MULI, 0, 0);
+			}
+
+			if (isFloatType(node->type)) {
+				gen_code_i(ADDF, 0, 0);
+			} else {
+				gen_code_i(ADDI, 0, 0);
+			}
+
+			break;
+		case N_EXP_SUB:
+			gen_expression(node->llink);
+			gen_expression(node->rlink);
+			if (isPointerOrArrayType(node->llink->type) && !isPointerOrArrayType(node->rlink->type)) {
+				gen_code_i(LITI, 0, node->llink->type->element_type->size);
+				gen_code_i(MULI, 0, 0);
+			}
+
+			if (isFloatType(node->type)) {
+				gen_code_i(SUBF, 0, 0);
+			} else {
+				gen_code_i(SUBI, 0, 0);
+			}
+
+			break;
+		case N_EXP_LSS:
+			gen_expression(node->llink);
+			gen_expression(node->rlink);
+
+			if (isFloatType(node->llink->type)) {
+				gen_code_i(LSSF, 0, 0);
+			} else {
+				gen_code_i(LSSI, 0, 0);
+			}
+
+			break;
+		case N_EXP_GTR:
+			gen_expression(node->llink);
+			gen_expression(node->rlink);
+
+			if (isFloatType(node->llink->type)) {
+				gen_code_i(GTRF, 0, 0);
+			} else {
+				gen_code_i(GTRI, 0, 0);
+			}
+
+			break;
+		case N_EXP_LEQ:
+			gen_expression(node->llink);
+			gen_expression(node->rlink);
+
+			if (isFloatType(node->llink->type)) {
+				gen_code_i(LEQF, 0, 0);
+			} else {
+				gen_code_i(LEQI, 0, 0);
+			}
+
+			break;
+		case N_EXP_GEQ:
+			gen_expression(node->llink);
+			gen_expression(node->rlink);
+
+			if (isFloatType(node->llink->type)) {
+				gen_code_i(GEQF, 0, 0);
+			} else {
+				gen_code_i(GEQI, 0, 0);
+			}
+
+			break;
+		case N_EXP_NEQ:
+			gen_expression(node->llink);
+			gen_expression(node->rlink);
+
+			if (isFloatType(node->llink->type)) {
+				gen_code_i(NEQF, 0, 0);
+			} else {
+				gen_code_i(NEQI, 0, 0);
+			}
+
+			break;
+		case N_EXP_EQL:
+			gen_expression(node->llink);
+			gen_expression(node->rlink);
+
+			if (isFloatType(node->llink->type)) {
+				gen_code_i(EQLF, 0, 0);
+			} else {
+				gen_code_i(EQLI, 0, 0);
+			}
+
+			break;
+		case N_EXP_AND:
+			gen_expression(node->llink);
+			gen_code_l(JPCR, 0, i = get_lable());
+			gen_expression(node->rlink);
+			gen_label_number(i);
+			break;
+		case N_EXP_OR:
+			gen_expression(node->llink);
+			gen_code_l(JPCR, 0, i = get_lable());
+			gen_expression(node->rlink);
+			gen_label_number(i);
+			break;
+		case N_EXP_ASSIGN:
+			gen_expression_left(node->llink);
+			gen_expression(node->rlink);
+			i = node->type->size;
+			if (i == 1) {
+				gen_code_i(STXB, 0, 0);
+			} else {
+				gen_code_i(STX, 0, (i % 4) ? (i / 4 + 1) : (i / 4));
+			}
+			break;
+		default:
+			gen_error(100, node->line);
+			break;
+	}
+
+}
+
+void gen_expression_left(A_NODE *node){
+	A_ID *id;
+	A_TYPE *t;
+	int result;
+
+	switch(node->name) {
+		case N_EXP_IDENT:
+			id = node->clink;
+			t = id->type;
+			switch (id->kind) {
+				case ID_VAR:
+				case ID_PARM:
+					switch (t->kind) {
+						case T_ENUM:
+						case T_POINTER:
+							gen_code_i(LDA, id->level, id->address);
+							break;
+						case T_ARRAY:
+							if (id->kind == ID_VAR) {
+								gen_code_i(LDA, id->level, id->address);
+							} else {
+								gen_code_i(LOD, id->level, id->address);
+							}
+							break;
+						default:
+							gen_error(13, node->line, id->name);
+							break;
+					}
+				case ID_FUNC:
+					gen_code_s(ADDR, 0, id->name);
+					break;
+				default:
+					gen_error(13, node->line, id->name);
+					break;
+			}
+		case N_EXP_ARRAY:
+			gen_expression(node->llink);
+			gen_expression(node->rlink);
+			if (node->type->size > 1) {
+				gen_code_i(LITI, 0, node->type->size);
+				gen_code_i(MULI, 0, 0);
+			}
+			gen_code_i(OFFSET, 0, 0);
+			break;
+		case N_EXP_STAR:
+			gen_expression(node->clink);
+			break;
+		case N_EXP_INT_CONST:
+		case N_EXP_FLOAT_CONST:
+		case N_EXP_CHAR_CONST:
+		case N_EXP_STRING_LITERAL:
+		case N_EXP_FUNCTION_CALL:
 		case N_EXP_POST_INC:
 		case N_EXP_POST_DEC:
 		case N_EXP_PRE_INC:
@@ -171,7 +514,6 @@ void gen_expression(A_NODE *){
 		case N_EXP_PLUS:
 		case N_EXP_MINUS:
 		case N_EXP_AMP:
-		case N_EXP_STAR:
 		case N_EXP_SIZE_EXP:
 		case N_EXP_SIZE_TYPE:
 		case N_EXP_CAST:
@@ -189,31 +531,120 @@ void gen_expression(A_NODE *){
 		case N_EXP_AND:
 		case N_EXP_OR:
 		case N_EXP_ASSIGN:
+			gen_error(12, node->line);
+			break;
 		default:
 			gen_error(100, node->line);
+			break;
+	}
+}
+void gen_arg_expression(A_NODE * node){
+	A_NODE *n;
+	switch(node->name) {
+		case N_ARG_LIST :
+			gen_expression(node->link);
+			gen_arg_expression(node->rlink);
+			break;
+		case N_ARG_LIST_LIL :
+			break;
+		default:
+			gen_error(100, node->line);
+			break;
+	}
+}
+void gen_statement(A_NODE *node, int cont_label, int break_label){}
+void gen_statement_list(A_NODE *node, int cont_label, int break_label){}
+void gen_declaration_list(A_ID *id){
+	while (id) {
+		gen_declaration(id);
+		id = id->link;
+	}
+}
+void gen_declaration(A_ID *id){
+	int i;
+	A_NODE *node;
+	switch (id->kind) {
+		case ID_VAR:
+			if (id->init) {
+				//gen_error();
+			}
+			break;
+		case ID_FUNC:
+			if (id->type->expr) {
+				gen_label_name(id->name);
+				gen_code_i(INT, 0, id->type->local_var_size):
+				gen_statement(id->type->expr, 0, 0);
+				gen_code_i(RET, 0, 0);
+			}
+			break;
+		case ID_PARM:
+		case ID_TYPE:
+		case ID_ENUM:
+		case ID_STRUCT:
+		case ID_FIELD:
+		case ID_ENUM_LITERAL:
+		case ID_NULL:
+			break;
+		default:
+			gen_error(100, id->line);
+			break;
+
+	}
+}
+void gen_code_i(OPCODE op, int l, int a){
+	fprintf(fout, "\t%9s %d, %d\n", opcode_name[op], l, a);
+}
+void gen_code_f(OPCODE op, int l, float a){
+	fprintf(fout, "\t%9s %d, %f\n", opcode_name[op], l, a);
+}
+
+void gen_code_s(OPCODE op, int l, char *a){
+	fprintf(fout, "\t%9s %d, %s\n", opcode_name[op], l, a);
+}
+void gen_code_l(OPCODE op, int l, int a){
+	fprintf(fout, "\t%9s %d, L%d\n", opcode_name[op], l, a);
+}
+void gen_label_number(int i){
+	fprintf(fout, "L%d:\n", i);
+}
+void gen_label_name(char *s){
+	fprintf(fout, "%s:\n", s);
+}
+void gen_error(int i, int ll, char *s){
+	gen_err++;
+	printf("*** error at line %d: ", ll);
+	switch (i) {
+		case 11:
+			printf("illegal identifier in expression\n");
+			break;
+		case 12:
+			printf("illegal l-value expression\n");
+			break;
+		case 13:
+			printf("identifier %s not lvalue expression\n", s);
+			break;
+		case 20:
+			printf("illegal default label in switch statement\n");
+			break;
+		case 21:
+			printf("illegal case label in switch statement\n");
+			break;
+		case 22:
+			printf("no destination for conitinue statement\n");
+			break;
+		case 23:
+			printf("no destination for break statement\n");
+			break;
+		case 100:
+			printf("fatal compiler error during code generation\n");
+			break;
+		default:
+			printf("unknown \n");
 			break;
 	}
 
 }
 
-void gen_expression_left(A_NODE *){}
-void gen_arg_expression(A_NODE *){}
-void gen_statement(A_NODE *, int, int){}
-void gen_statement_list(A_NODE *, int, int){}
-void gen_initializer_global(A_NODE *, A_TYPE *, int){}
-void gen_initializer_local(A_NODE *, A_TYPE *, int){}
-void gen_declaration_list(A_ID *){}
-void gen_declaration(A_ID *){}
-void gen_code_i(OPCODE, int, int){}
-void gen_code_f(OPCODE, int, int){}
-void gen_code_s(OPCODE, int, int){}
-void gen_code_l(OPCODE, int, int){}
-void gen_label_number(int){}
-void gen_label_name(char *){}
-void gen_error(){
-
-}
-
 int get_label(){
-
+	return ++label_no;
 }
