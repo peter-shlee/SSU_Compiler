@@ -1,11 +1,14 @@
-a.out : y.tab.o lex.yy.o my_c_func.o print.o semantic.o print_sem.o
-	gcc -o a.out y.tab.o lex.yy.o my_c_func.o print.o semantic.o print_sem.o
+a.out : y.tab.o lex.yy.o my_c_func.o print.o semantic.o print_sem.o code_generator.o
+	gcc -o a.out y.tab.o lex.yy.o my_c_func.o print.o semantic.o print_sem.o code_generator.o
 
 y.tab.o : y.tab.c
 	gcc -g -c y.tab.c
 
 lex.yy.o : lex.yy.c
 	gcc -g -c lex.yy.c
+
+code_generator.o : code_generator.c
+	gcc -g -c code_generator.c
 
 semantic.o : semantic.c
 	gcc -g -c semantic.c

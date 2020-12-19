@@ -2,10 +2,10 @@
 #include <string.h>
 #include "type.h"
 typedef enum op {
-	OP_NULL, LOD, LDX, LDXB, LDA, LITI, STO, STOB, STX, STXB, SUBI, SUBF, DIVI, DIVF, ADDI, ADDF, OFFSET, MULI, MULF, MOD, LSSI, LSSF, GTRI, GTRF, LEQI, LEQF, GEQI, GEQF, NEQI, NEQF, EQLI, EQLF, NOT, OR, AND, CVTI, CVTF, JPC, JPCR, JMP, JPT, JPTR, INT, INCI, INCF, DECI, DECF, SUB, CAL, ADDR, RET, MINUSI, MINUSF, CHK, LDI, LDIB, POP, POPB
+	OP_NULL, LOD, LDX, LDXB, LDA, LITI, STO, STOB, STX, STXB, SUBI, SUBF, DIVI, DIVF, ADDI, ADDF, OFFSET, MULI, MULF, MOD, LSSI, LSSF, GTRI, GTRF, LEQI, LEQF, GEQI, GEQF, NEQI, NEQF, EQLI, EQLF, NOT, OR, AND, CVTI, CVTF, JPC, JPCR, JMP, JPT, JPTR, INT, INCI, INCF, DECI, DECF, SUP, CAL, ADDR, RET, MINUSI, MINUSF, CHK, LDI, LDIB, POP, POPB
 } OPCODE;
 char *opcode_name[] = {
-"OP_NULL", "LOD", "LDX", "LDXB", "LDA", "LITI", "STO", "STOB", "STX", "STXB", "SUBI", "SUBF", "DIVI", "DIVF", "ADDI", "ADDF", "OFFSET", "MULI", "MULF", "MOD", "LSSI", "LSSF", "GTRI", "GTRF", "LEQI", "LEQF", "GEQI", "GEQF", "NEQI", "NEQF", "EQLI", "EQLF", "NOT", "OR", "AND", "CVTI", "CVTF", "JPC", "JPCR", "JMP", "JPT", "JPTR", "INT", "INCI", "INCF", "DECI", "DECF", "SUB", "CAL", "ADDR", "RET", "MINUSI", "MINUSF", "CHK", "LDI", "LDIB", "POP", "POPB"
+"OP_NULL", "LOD", "LDX", "LDXB", "LDA", "LITI", "STO", "STOB", "STX", "STXB", "SUBI", "SUBF", "DIVI", "DIVF", "ADDI", "ADDF", "OFFSET", "MULI", "MULF", "MOD", "LSSI", "LSSF", "GTRI", "GTRF", "LEQI", "LEQF", "GEQI", "GEQF", "NEQI", "NEQF", "EQLI", "EQLF", "NOT", "OR", "AND", "CVTI", "CVTF", "JPC", "JPCR", "JMP", "JPT", "JPTR", "INT", "INCI", "INCF", "DECI", "DECF", "SUP", "CAL", "ADDR", "RET", "MINUSI", "MINUSF", "CHK", "LDI", "LDIB", "POP", "POPB"
 };
 
 void code_generation(A_NODE *);
@@ -42,7 +42,7 @@ void code_generation(A_NODE *node){
 void gen_literal_table(){
 	int i;
 	for (i = 1; i <= literal_no; ++i) {
-		fprintf(fout, ".literal %5d ", literal_table[i].addr);
+		fprintf(fout, ".literal %d ", literal_table[i].addr);
 		if (literal_table[i].type == int_type) {
 			fprintf(fout, "%d\n", literal_table[i].value.i);
 		} else if (literal_table[i].type == float_type) {
@@ -133,7 +133,7 @@ void gen_expression(A_NODE *node){
 			if (!isArrayType(node->type)) {
 				i = node->type->size;
 				if (i == 1)
-					gen_code_i(LIDIB, 0, 0);
+					gen_code_i(LDIB, 0, 0);
 				else
 					gen_code_i(LDI, 0, (i % 4) ? (i / 4 + 1) : (i / 4));
 			}
@@ -144,13 +144,13 @@ void gen_expression(A_NODE *node){
 			if (i % 4) 
 				i = i / 4 * 4 + 4;
 			if (node->rlink) {
-				gen_code_i(ITN, 0, 12 + i);
+				gen_code_i(INT, 0, 12 + i);
 				gen_arg_expression(node->rlink);
 				gen_code_i(POP, 0, node->rlink->value/4 + 3);
 			} else {
 				gen_code_i(INT, 0, i);
 			}
-			gen_exrpession(node->llink);
+			gen_expression(node->llink);
 			gen_code_i(CAL, 0, 0);
 			break;
 		case N_EXP_POST_INC:
@@ -264,7 +264,7 @@ void gen_expression(A_NODE *node){
 			gen_expression(node->clink);
 			break;
 		case N_EXP_MINUS:
-			gen_expression(node->clnik);
+			gen_expression(node->clink);
 			if (isFloatType(node->clink)) {
 				gen_code_i(MINUSF, 0, 0);
 			} else {
@@ -325,14 +325,14 @@ void gen_expression(A_NODE *node){
 		case N_EXP_ADD:
 			gen_expression(node->llink);
 
-			if (isPointerOrArrayType(node->rlink0>type)) {
+			if (isPointerOrArrayType(node->rlink->type)) {
 				gen_code_i(LITI, 0, node->rlink->type->element_type->size);
 				gen_code_i(MULI, 0, 0);
 			}
 
 			gen_expression(node->rlink);
 
-			if (isPointerOrArrayType(node->llnik->type)) {
+			if (isPointerOrArrayType(node->llink->type)) {
 				gen_code_i(LITI, 0, node->llink->type->element_type->size);
 				gen_code_i(MULI, 0, 0);
 			}
@@ -427,13 +427,13 @@ void gen_expression(A_NODE *node){
 			break;
 		case N_EXP_AND:
 			gen_expression(node->llink);
-			gen_code_l(JPCR, 0, i = get_lable());
+			gen_code_l(JPCR, 0, i = get_label());
 			gen_expression(node->rlink);
 			gen_label_number(i);
 			break;
 		case N_EXP_OR:
 			gen_expression(node->llink);
-			gen_code_l(JPCR, 0, i = get_lable());
+			gen_code_l(JPCR, 0, i = get_label());
 			gen_expression(node->rlink);
 			gen_label_number(i);
 			break;
@@ -482,6 +482,7 @@ void gen_expression_left(A_NODE *node){
 							gen_error(13, node->line, id->name);
 							break;
 					}
+					break;
 				case ID_FUNC:
 					gen_code_s(ADDR, 0, id->name);
 					break;
@@ -489,6 +490,7 @@ void gen_expression_left(A_NODE *node){
 					gen_error(13, node->line, id->name);
 					break;
 			}
+			break;
 		case N_EXP_ARRAY:
 			gen_expression(node->llink);
 			gen_expression(node->rlink);
@@ -542,18 +544,142 @@ void gen_arg_expression(A_NODE * node){
 	A_NODE *n;
 	switch(node->name) {
 		case N_ARG_LIST :
-			gen_expression(node->link);
+			gen_expression(node->llink);
 			gen_arg_expression(node->rlink);
 			break;
-		case N_ARG_LIST_LIL :
+		case N_ARG_LIST_NIL :
 			break;
 		default:
 			gen_error(100, node->line);
 			break;
 	}
 }
-void gen_statement(A_NODE *node, int cont_label, int break_label){}
-void gen_statement_list(A_NODE *node, int cont_label, int break_label){}
+
+void gen_statement(A_NODE *node, int count_label, int break_label){
+	A_NODE *n;
+	int i,l1,l2,l3;
+	switch(node->name) {
+		case N_STMT_COMPOUND:
+			if(node->llink) 
+				gen_declaration_list(node->llink);
+			gen_statement_list(node->rlink, count_label, break_label);
+			break;
+		case N_STMT_EMPTY: break;
+		case N_STMT_EXPRESSION:
+						   n = node->clink;
+						   gen_expression(n);
+						   i = n->type->size;
+						   if (i) 
+							   gen_code_i(POP,0, (i / 4) ? (i / 4 + 1) : (i / 4));
+						   break;
+		case N_STMT_IF:
+						   gen_expression(node->llink);
+						   gen_code_l(JPC, 0, l1 = get_label());
+						   gen_statement(node->rlink,count_label,break_label);
+						   gen_label_number(l1);
+						   break;
+		case N_STMT_IF_ELSE:
+						   gen_expression(node->llink);
+						   gen_code_l(JPC, 0, l1=get_label());
+						   gen_statement(node->clink,count_label,break_label);
+						   gen_code_l(JMP, 0, l2=get_label());
+						   gen_label_number(l1);
+						   gen_statement(node->rlink,count_label,break_label);
+						   gen_label_number(l2);
+						   break;
+		case N_STMT_SWITCH: 
+						   gen_error(200, node->line);
+						   break;
+		case N_STMT_WHILE:
+							l3=get_label();
+							gen_label_number(l1=get_label());
+							gen_expression(node->llink);
+							gen_code_l(JPC, 0, l2=get_label());
+							gen_statement(node->rlink,l3,l2);
+							gen_label_number(l3);
+							gen_code_l(JMP, 0, l1);
+							gen_label_number(l2);
+							break;
+		case N_STMT_DO:
+							l3=get_label();
+							l2=get_label();
+							gen_label_number(l1=get_label());
+							gen_statement(node->llink,l2,l3);
+							gen_label_number(l2);
+							gen_expression(node->rlink);
+							gen_code_l(JPT, 0, l1);
+							gen_label_number(l3);
+							break;
+		case N_STMT_FOR:
+							n=node->llink;
+							l3=get_label();
+							if (n->llink) {
+								gen_expression(n->llink);
+								i = n->llink->type->size;
+								if (i) {
+									gen_code_i(POP, 0, i%4?i/4+1:i/4);
+								}
+							}
+							gen_label_number(l1=get_label());
+							l2=get_label();
+							if (n->clink) { 
+								gen_expression(n->clink); 
+								gen_code_l(JPC, 0, l2);
+							}
+							gen_statement(node->rlink,l3,l2);
+							gen_label_number(l3);
+							if (n->rlink) {
+								gen_expression(n->rlink);
+								i = n->rlink->type->size;
+								if (i)
+									gen_code_i(POP, 0, i%4?i/4+1:i/4);
+							}
+							gen_code_l(JMP, 0, l1);
+							gen_label_number(l2);
+							break;
+		case N_STMT_CONTINUE:
+							if (count_label)
+								gen_code_l(JMP,0,count_label);
+							else
+								gen_error(22,node->line);
+							break;
+		case N_STMT_BREAK:
+							if (break_label)
+								gen_code_l(JMP,0,break_label);
+							else
+								gen_error(23,node->line);
+							break;
+		case N_STMT_RETURN:
+							n=node->clink;
+							if(n) { 
+								i=n->type->size;
+								if (i%4) i=i/4*4+4;
+								gen_code_i(LDA, 1, -i);
+								gen_expression(n);
+								gen_code_i(STO, 0, i/4);
+							}
+							gen_code_i(RET,0,0);
+							break;
+		default:
+							gen_error(100, node->line);
+							break;
+	}
+}
+
+void gen_statement_list(A_NODE *node, int count_label, int break_label){
+	switch(node->name) {
+		case N_STMT_LIST:
+			gen_statement(node->llink, count_label, break_label);
+			gen_statement_list(node->rlink, count_label, break_label);
+			break;
+		case N_STMT_LIST_NIL:
+			break;
+		default:
+			gen_error(100, node->line);
+			break;
+	}
+}
+
 void gen_declaration_list(A_ID *id){
 	while (id) {
 		gen_declaration(id);
@@ -566,13 +692,12 @@ void gen_declaration(A_ID *id){
 	switch (id->kind) {
 		case ID_VAR:
 			if (id->init) {
-				//gen_error();
 			}
 			break;
 		case ID_FUNC:
 			if (id->type->expr) {
 				gen_label_name(id->name);
-				gen_code_i(INT, 0, id->type->local_var_size):
+				gen_code_i(INT, 0, id->type->local_var_size);
 				gen_statement(id->type->expr, 0, 0);
 				gen_code_i(RET, 0, 0);
 			}
@@ -637,6 +762,9 @@ void gen_error(int i, int ll, char *s){
 			break;
 		case 100:
 			printf("fatal compiler error during code generation\n");
+			break;
+		case 200:
+			printf("switch statements are not supported\n");
 			break;
 		default:
 			printf("unknown \n");

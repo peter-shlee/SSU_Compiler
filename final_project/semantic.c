@@ -461,6 +461,7 @@ void sem_arg_expression_list(A_NODE *node, A_ID *id) {
 					t=sem_expression(node->llink);
 					sem_arg_expression_list(node->rlink,id); 
 				}
+				arg_size = node->llink->type->size+node->rlink->value;
 			}
 			break;
 		case N_ARG_LIST_NIL :

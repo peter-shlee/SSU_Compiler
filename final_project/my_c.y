@@ -8,6 +8,7 @@ typedef long YYSTYPE;
 #include "my_c_func.h"
 #include <stdio.h>
 
+FILE *fout;
 extern int line_no, syntax_err, current_level;
 extern A_NODE *root;
 extern A_ID *current_id;
@@ -272,6 +273,11 @@ extern char *yytext;
 void yyerror(char *s) { printf("line %d %s near %s \n", line_no, s, yytext); }
 
 void main() { //적당히 고쳐서 사용하세요
+	if ((fout = fopen("a.asm", "w")) == NULL) {
+		printf("can not open output file: a.asm\n");
+		exit(1);
+	}
+
 	initialize();
 	yyparse();
 
@@ -283,6 +289,7 @@ void main() { //적당히 고쳐서 사용하세요
 	
 	semantic_analysis(root);
 	print_sem_ast(root);
+	code_generation(root);
 
 	return;
 }
