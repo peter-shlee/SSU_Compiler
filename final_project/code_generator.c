@@ -570,7 +570,7 @@ void gen_statement(A_NODE *node, int count_label, int break_label){
 						   gen_expression(n);
 						   i = n->type->size;
 						   if (i) 
-							   gen_code_i(POP,0, (i / 4) ? (i / 4 + 1) : (i / 4));
+							   gen_code_i(POP,0, (i % 4) ? (i / 4 + 1) : (i / 4));
 						   break;
 		case N_STMT_IF:
 						   gen_expression(node->llink);
@@ -617,7 +617,7 @@ void gen_statement(A_NODE *node, int count_label, int break_label){
 								gen_expression(n->llink);
 								i = n->llink->type->size;
 								if (i) {
-									gen_code_i(POP, 0, i%4?i/4+1:i/4);
+									gen_code_i(POP, 0, (i % 4) ? (i / 4 + 1) : (i / 4));
 								}
 							}
 							gen_label_number(l1=get_label());
@@ -632,7 +632,7 @@ void gen_statement(A_NODE *node, int count_label, int break_label){
 								gen_expression(n->rlink);
 								i = n->rlink->type->size;
 								if (i)
-									gen_code_i(POP, 0, i%4?i/4+1:i/4);
+									gen_code_i(POP, 0, (i % 4) ? (i / 4 + 1) : (i / 4));
 							}
 							gen_code_l(JMP, 0, l1);
 							gen_label_number(l2);

@@ -1,0 +1,55 @@
+======= syntax tree ==========
+N_PROGRAM (0,0)
+| (ID="main") TYPE:e6cd2b70 KIND:FUNC SPEC=NULL LEV=0 VAL=0 ADDR=0 
+| | TYPE
+| | | FUNCTION
+| | | | PARAMETER
+| | | | TYPE
+| | | | | (int)
+| | | | BODY
+| | | | | N_STMT_COMPOUND (0,0)
+| | | | | | N_STMT_LIST (0,0)
+| | | | | | | N_STMT_EXPRESSION (0,0)
+| | | | | | | | N_EXP_FUNCTION_CALL (0,0)
+| | | | | | | | | N_EXP_IDENT (0,0)
+| | | | | | | | | | (ID="printf") TYPE:e6ccd7b0 KIND:FUNC SPEC=NULL LEV=0 VAL=0 ADDR=0 
+| | | | | | | | | N_ARG_LIST (0,0)
+| | | | | | | | | | N_EXP_STRING_LITERAL (0,0)
+| | | | | | | | | | | "%s\n"
+| | | | | | | | | | N_ARG_LIST (0,0)
+| | | | | | | | | | | N_EXP_STRING_LITERAL (0,0)
+| | | | | | | | | | | | "hello world"
+| | | | | | | | | | | N_ARG_LIST_NIL (0,0)
+| | | | | | | N_STMT_LIST (0,0)
+| | | | | | | | N_STMT_RETURN (0,0)
+| | | | | | | | | N_EXP_INT_CONST (0,0)
+| | | | | | | | | | 0
+| | | | | | | | N_STMT_LIST_NIL (0,0)
+======= semantic tree ==========
+N_PROGRAM (0,36)
+| (ID="main") TYPE:e6cd2b70 KIND:FUNC SPEC=NULL LEV=0 VAL=0 ADDR=0
+| | TYPE
+| | | FUNCTION
+| | | |PARAMETER
+| | | |TYPE
+| | | | | (int)
+| | | |BODY
+| | | | | N_STMT_COMPOUND (0,0)
+| | | | | | N_STMT_LIST (0,0)
+| | | | | | | N_STMT_EXPRESSION (0,0)
+| | | | | | | | N_EXP_FUNCTION_CALL (e6ccd690,0)
+| | | | | | | | | N_EXP_AMP (e6cd3fc0,0)
+| | | | | | | | | | N_EXP_IDENT (e6ccd7b0,0)
+| | | | | | | | | | | (ID="printf") TYPE:e6ccd7b0 KIND:FUNC SPEC=NULL LEV=0 VAL=0 ADDR=0
+| | | | | | | | | N_ARG_LIST (0,8)
+| | | | | | | | | | N_EXP_STRING_LITERAL (e6ccd6d0,0)
+| | | | | | | | | | | LITERAL: "%s\n"
+| | | | | | | | | | N_ARG_LIST (0,4)
+| | | | | | | | | | | N_EXP_STRING_LITERAL (e6ccd6d0,0)
+| | | | | | | | | | | | LITERAL: "hello world"
+| | | | | | | | | | | N_ARG_LIST_NIL (0,0)
+| | | | | | | N_STMT_LIST (0,0)
+| | | | | | | | N_STMT_RETURN (0,0)
+| | | | | | | | | N_EXP_INT_CONST (e6ccd4e0,0)
+| | | | | | | | | | INT=0
+| | | | | | | | N_STMT_LIST_NIL (0,0)
