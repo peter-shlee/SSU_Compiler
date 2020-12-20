@@ -1,301 +1,77 @@
-	      INT 0, 120
+	      INT 0, 32
 	      SUP 0, main
 	      RET 0, 0
-sort:
-	      INT 0, 40
-	      LDA 1, 20
-	     LITI 0, 1
+main:
+	      INT 0, 24
+	      LDA 1, 16
+	     LITI 0, 10
 	      STX 0, 1
 	      POP 0, 1
-	      LDA 1, 24
+	      LDA 1, 12
+	      INT 0, 16
+	     LITI 0, 4
 	      LOD 1, 16
+	     MULI 0, 0
+	      POP 0, 4
+	     ADDR 0, malloc
+	      CAL 0, 0
 	      STX 0, 1
 	      POP 0, 1
-	      LDA 1, 28
-	      LDA 0, 12
-	      LOD 1, 12
-	      LOD 1, 16
-	     ADDI 0, 0
-	     LITI 0, 2
-	     DIVI 0, 0
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	      LDI 0, 1
-	      STX 0, 1
-	      POP 0, 1
-L3:
-L5:
-	      LDA 0, 12
-	      LOD 1, 20
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	      LDI 0, 1
-	      LOD 1, 28
-	     LSSI 0, 0
-	      JPC 0, L6
-	      LOD 1, 20
 	      LDA 1, 20
-	      LDX 0, 1
-	     INCI 0, 0
-	      STO 0, 1
-	      POP 0, 1
-L4:
-	      JMP 0, L5
-L6:
-L8:
-	      LOD 1, 28
-	      LDA 0, 12
-	      LOD 1, 24
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	      LDI 0, 1
-	     LSSI 0, 0
-	      JPC 0, L9
-	      LOD 1, 24
-	      LDA 1, 24
-	      LDX 0, 1
-	     DECI 0, 0
-	      STO 0, 1
-	      POP 0, 1
-L7:
-	      JMP 0, L8
-L9:
-	      LOD 1, 20
-	      LOD 1, 24
-	     LEQI 0, 0
-	      JPC 0, L10
-	      LDA 1, 32
-	      LDA 0, 12
-	      LOD 1, 20
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	      LDI 0, 1
+	     LITI 0, 0
 	      STX 0, 1
 	      POP 0, 1
-	      LDA 0, 12
-	      LOD 1, 20
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	      LDA 0, 12
-	      LOD 1, 24
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	      LDI 0, 1
-	      STX 0, 1
-	      POP 0, 1
-	      LDA 0, 12
-	      LOD 1, 24
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	      LOD 1, 32
-	      STX 0, 1
-	      POP 0, 1
-	      LOD 1, 20
-	      LDA 1, 20
-	      LDX 0, 1
-	     INCI 0, 0
-	      STO 0, 1
-	      POP 0, 1
-	      LOD 1, 24
-	      LDA 1, 24
-	      LDX 0, 1
-	     DECI 0, 0
-	      STO 0, 1
-	      POP 0, 1
-L10:
 L2:
 	      LOD 1, 20
-	      LOD 1, 24
-	     LEQI 0, 0
-	      JPT 0, L3
+	      LOD 1, 16
+	     LSSI 0, 0
+	      JPC 0, L3
+	      LOD 1, 12
+	      LOD 1, 20
+	     LITI 0, 4
+	     MULI 0, 0
+	   OFFSET 0, 0
+	      LOD 1, 20
+	      STX 0, 1
+	      POP 0, 1
 L1:
-	      LOD 1, 12
-	      LOD 1, 24
-	     LSSI 0, 0
-	      JPC 0, L11
-	      INT 0, 12
-	      LOD 1, 12
-	      LOD 1, 24
-	      POP 0, 5
-	     ADDR 0, sort
-	      CAL 0, 0
-L11:
-	      LOD 1, 20
-	      LOD 1, 16
-	     LSSI 0, 0
-	      JPC 0, L12
-	      INT 0, 12
-	      LOD 1, 20
-	      LOD 1, 16
-	      POP 0, 5
-	     ADDR 0, sort
-	      CAL 0, 0
-L12:
-	      RET 0, 0
-init_array:
-	      INT 0, 12
-	      LDA 0, 12
-	     LITI 0, 0
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	     LITI 0, 0
-	      STX 0, 1
-	      POP 0, 1
-	      LDA 0, 12
-	     LITI 0, 1
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	     LITI 0, 1
-	      STX 0, 1
-	      POP 0, 1
-	      LDA 0, 12
-	     LITI 0, 2
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	     LITI 0, 3
-	      STX 0, 1
-	      POP 0, 1
-	      LDA 0, 12
-	     LITI 0, 3
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	     LITI 0, 5
-	      STX 0, 1
-	      POP 0, 1
-	      LDA 0, 12
-	     LITI 0, 4
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	     LITI 0, 7
-	      STX 0, 1
-	      POP 0, 1
-	      LDA 0, 12
-	     LITI 0, 5
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	     LITI 0, 9
-	      STX 0, 1
-	      POP 0, 1
-	      LDA 0, 12
-	     LITI 0, 6
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	     LITI 0, 2
-	      STX 0, 1
-	      POP 0, 1
-	      LDA 0, 12
-	     LITI 0, 7
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	     LITI 0, 4
-	      STX 0, 1
-	      POP 0, 1
-	      LDA 0, 12
-	     LITI 0, 8
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	     LITI 0, 6
-	      STX 0, 1
-	      POP 0, 1
-	      LDA 0, 12
-	     LITI 0, 9
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	     LITI 0, 8
-	      STX 0, 1
-	      POP 0, 1
-	      RET 0, 0
-print_array:
-	      INT 0, 20
-	      INT 0, 12
-	      LDA 0, 52
-	      LOD 1, 12
-	      POP 0, 5
-	     ADDR 0, printf
-	      CAL 0, 0
-	      LDA 1, 16
-	     LITI 0, 0
-	      STX 0, 1
-	      POP 0, 1
-L14:
-	      LOD 1, 16
-	     LITI 0, 10
-	     LSSI 0, 0
-	      JPC 0, L15
-	      INT 0, 12
-	      LDA 0, 64
-	      LDA 0, 12
-	      LOD 1, 16
-	     LITI 0, 4
-	     MULI 0, 0
-	   OFFSET 0, 0
-	      LDI 0, 1
-	      POP 0, 5
-	     ADDR 0, printf
-	      CAL 0, 0
-L13:
-	      LOD 1, 16
-	      LDA 1, 16
+	      LDA 1, 20
 	      LDX 0, 1
 	     INCI 0, 0
-	      STO 0, 1
+	      STX 0, 1
 	      POP 0, 1
-	      JMP 0, L14
-L15:
-	      INT 0, 12
-	      LDA 0, 72
-	      POP 0, 4
-	     ADDR 0, printf
-	      CAL 0, 0
-	      RET 0, 0
-main:
-	      INT 0, 12
-	      INT 0, 12
-	      POP 0, 3
-	     ADDR 0, init_array
-	      CAL 0, 0
-	      INT 0, 12
-	      LDA 0, 80
-	      POP 0, 4
-	     ADDR 0, print_array
-	      CAL 0, 0
-	      INT 0, 12
-	      LDA 0, 96
-	      POP 0, 4
-	     ADDR 0, printf
-	      CAL 0, 0
-	      INT 0, 12
+	      JMP 0, L2
+L3:
+	      LDA 1, 20
 	     LITI 0, 0
-	     LITI 0, 9
-	      POP 0, 5
-	     ADDR 0, sort
-	      CAL 0, 0
+	      STX 0, 1
+	      POP 0, 1
+L5:
+	      LOD 1, 20
+	      LOD 1, 16
+	     LSSI 0, 0
+	      JPC 0, L6
 	      INT 0, 12
-	      LDA 0, 104
-	      POP 0, 4
-	     ADDR 0, print_array
+	      LDA 0, 12
+	      LOD 1, 20
+	     LITI 0, 1
+	     ADDI 0, 0
+	      LOD 1, 12
+	      LOD 1, 20
+	     LITI 0, 4
+	     MULI 0, 0
+	     ADDI 0, 0
+	      LDI 0, 1
+	      POP 0, 6
+	     ADDR 0, printf
 	      CAL 0, 0
+L4:
+	      LDA 1, 20
+	      LDX 0, 1
+	     INCI 0, 0
+	      STX 0, 1
+	      POP 0, 1
+	      JMP 0, L5
+L6:
 	      RET 0, 0
-.literal 52 "%s :\n"
-.literal 64 "%d "
-.literal 72 "\n"
-.literal 80 "before sort"
-.literal 96 "\n"
-.literal 104 "after sort"
+.literal 12 "nums[%d] : %d\n"
