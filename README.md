@@ -1,2 +1,2 @@
 # ssucompiler
-Soongsil Univ Compiler Lecture
+Compiler Lecture
